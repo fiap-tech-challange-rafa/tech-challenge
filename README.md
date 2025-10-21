@@ -86,7 +86,7 @@
 
 # 
 
-# Java 17
+# Java 21
 
 # 
 
@@ -194,11 +194,11 @@
 
 # ⚙️ Configuração (application.properties)
 
-# spring.datasource.url=jdbc:mysql://localhost:3306/oficina\_db?useSSL=false\&serverTimezone=America/Sao\_Paulo
+# spring.datasource.url=jdbc:mysql://localhost:3306/db\_db?useSSL=false\&serverTimezone=America/Sao\_Paulo
 
-# spring.datasource.username=root
+# spring.datasource.username={SEU_USER}
 
-# spring.datasource.password=senha123
+# spring.datasource.password={SUA_SENHA}
 
 # spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
@@ -232,7 +232,7 @@
 
 # 
 
-# Java 17+
+# Java 21+
 
 # 
 
@@ -252,9 +252,9 @@
 
 # 
 
-# git clone https://github.com/seuusuario/oficina-api.git
+# git clone https://github.com/rafaellarosa07/tech-challenge.git
 
-# cd oficina-api
+# cd tech-challange
 
 # 
 
@@ -278,7 +278,7 @@
 
 # 
 
-# API: http://localhost:8080/api
+# API: http://localhost:8080/api..
 
 # 
 
@@ -410,31 +410,12 @@
 
 # 
 
-# 🧠 Próximos Passos (Fase 2)
-
-# 
-
-# Implementar eventos de domínio (ex: OrcamentoGeradoEvent)
-
-# 
-
-# Integração com notificações (e-mail ou app)
-
-# 
-
-# Autenticação JWT
-
-# 
-
-# Dashboard de métricas e histórico de OS
-
-# 
 
 # 👩‍💻 Autora
 
-# 
 
-# Rafaella Aparecida Rosa Lima
+
+# Rafaella Aparecida Rosa Lima Torres
 
 # 📚 Pós-graduação FIAP — Software Architecture (SOAT)
 
