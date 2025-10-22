@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/clientes")
-@PreAuthorize("hasRole('ADMIN')")
 public class ClienteController {
 
     private final CadastrarClienteService cadastrar;
