@@ -1,3 +1,4 @@
+/*
 package br.com.fiap.techchallange.common;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -30,3 +31,4 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Erro interno"));
     }
 }
+*/

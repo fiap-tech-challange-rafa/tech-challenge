@@ -1,30 +1,34 @@
-package br.com.fiap.techchallange.controller;
+package br.com.fiap.techchallange.interfaces.rest.auth;
 
-import br.com.fiap.techchallange.security.JwtService;
+import br.com.fiap.techchallange.security.JwtTokenProvider;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider) {
         this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password) {
-        Authentication auth = authenticationManager.authenticate(
+    public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
+
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password));
 
-        UserDetails user = (UserDetails) auth.getPrincipal();
-        return jwtService.generateToken(user);
+        String token = jwtTokenProvider.generateToken(authentication.getName());
+
+        return ResponseEntity.ok(Map.of("token", token));
     }
 }

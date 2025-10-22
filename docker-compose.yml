@@ -1,38 +1,37 @@
-version: '3.8'
-
+version: "3.9"
 services:
-
-  mysql:
-    image: mysql:8.0
-    container_name: mysql-oficina
-    environment:
-      MYSQL_ROOT_PASSWORD: senha123
-      MYSQL_DATABASE: oficina_db
-      MYSQL_USER: oficina_user
-      MYSQL_PASSWORD: senha123
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - oficina-net
-
-  oficina-api:
+  app:
     build: .
-    container_name: oficina-api
-    depends_on:
-      - mysql
+    container_name: tech-challange-app
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/oficina_db?useSSL=false&serverTimezone=America/Sao_Paulo
-      SPRING_DATASOURCE_USERNAME: oficina_user
-      SPRING_DATASOURCE_PASSWORD: senha123
-    networks:
-      - oficina-net
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/techchallange?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: rafaellarosa07@gmail.com
+      SPRING_MAIL_PASSWORD: eyje kybv rihz gtvq
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: tech-challange-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: techchallange
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
 
 volumes:
-  mysql-data:
-
-networks:
-  oficina-net:
+  mysql_data:
