@@ -1,37 +1,41 @@
-version: "3.9"
-services:
-  app:
-    build: .
-    container_name: tech-challange-app
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/techchallange?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: rafaellarosa07@gmail.com
-      SPRING_MAIL_PASSWORD: eyje kybv rihz gtvq
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
-    depends_on:
-      - db
-    restart: always
+version: '3.8'
 
+services:
   db:
     image: mysql:8.0
-    container_name: tech-challange-db
+    container_name: mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: techchallange
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    restart: always
+
+  app:
+    build: .
+    container_name: tech-challange-app
+    depends_on:
+      - db
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=rafaellarosa07@gmail.com
+      - MAIL_PASSWORD=eyjekybvrihzgtvq
+      - JWT_SECRET=minhaChaveSecretaSuperSegura123456
+      - ADMIN_USER=admin
+      - ADMIN_PASSWORD=admin123
+    ports:
+      - "8080:8080"
 
 volumes:
   mysql_data:

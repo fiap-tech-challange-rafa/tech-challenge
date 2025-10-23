@@ -1,18 +1,19 @@
-FROM maven:3.9.8-eclipse-temurin-21 AS build
+# Etapa 1: construir o projeto
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jdk-alpine
+# Etapa 2: criar a imagem final
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 
-COPY --from=build /app/target/tech-challange-0.0.1-SNAPSHOT.jar app.jar
+# Define o profile ativo (pode ser sobrescrito no docker-compose)
+ENV SPRING_PROFILES_ACTIVE=docker
 
 EXPOSE 8080
 
-ENV SPRING_PROFILES_ACTIVE=docker
-
-# Comando para rodar a aplicação
+# Comando de inicialização
 ENTRYPOINT ["java","-jar","app.jar"]
