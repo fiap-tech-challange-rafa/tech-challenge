@@ -1,423 +1,192 @@
-# 🧰 Oficina Mecânica — Tech Challenge (Fase 1 - SOAT)
+# Tech Challenge — Fase 2 (Evolução)
 
-# 🧭 Sobre o Projeto
+Este repositório contém a evolução da aplicação da Fase 1 para a Fase 2 do POS TECX Tech Challenge. O objetivo desta fase é tornar a aplicação mais resiliente, testável e escalável, aplicando arquitetura hexagonal, testes automatizados, containerização, manifestos Kubernetes, IaC (Terraform) e CI/CD.
 
-# 
+---
 
-# Este projeto é o resultado da Fase 1 do Tech Challenge da pós-graduação em Arquitetura de Software (SOAT - FIAP/Alura).
+## 1. Descrição da solução e objetivos
 
-# Trata-se de uma API REST desenvolvida em Spring Boot, estruturada com DDD (Domain-Driven Design), que implementa o domínio de uma oficina mecânica.
+Solução: uma API REST para gestão de oficina (clientes, veículos, serviços, peças e ordens de serviço) refatorada com Arquitetura Hexagonal (Ports & Adapters). A aplicação expõe APIs para criar e acompanhar Ordens de Serviço (OS), gerar e aprovar orçamentos, realizar serviços, controlar peças e registrar entrega.
 
-# 
+Principais objetivos atendidos nesta fase:
+- Aplicar Clean Code e Arquitetura Hexagonal (separação clara entre domain, application e adapters).
+- Implementar ports (interfaces) e adapters (JPA, controllers) para facilitar testes e manutenção.
+- Cobertura de testes automatizados (unitários e integração) para fluxos críticos.
+- Containerização via Docker e execução local via docker-compose.
+- Manifestos Kubernetes (Deployment, Service, ConfigMap, Secret, HPA) para orquestração.
+- Skeleton de Terraform para provisionamento (local/cloud) e pipeline CI/CD (GitHub Actions) para build/test/deploy.
 
-# O sistema permite gerenciar:
+---
 
-# 
+## 2. Desenho da arquitetura proposta
 
-# Clientes
+Arquitetura: Hexagonal (Ports & Adapters)
 
-# 
+- Controllers (adapters in) → Ports (application.port.in) → Application Services (casos de uso) → Ports (application.port.out) → Repositories / Adapters out (JPA, external clients)
+- Domain (pure business rules) no centro (entidades e regras de negócio).
 
-# Veículos
+Diagrama (Mermaid):
 
-# 
+```mermaid
+flowchart LR
+  subgraph Adapter_In
+    Controller["REST Controllers\n(api/ordem-servico, api/admin/...)"]
+  end
+  subgraph Application
+    PortsIn["Ports (in)\nCriarOrdem, BuscarOrdem,..."]
+    Services["Use-Cases / Services"]
+    PortsOut["Ports (out)\nRepositoryPort, NotifierPort"]
+  end
+  subgraph Domain
+    Domain["Entities & Rules\nOrdemServico, ItemServico, ItemPeca..."]
+  end
+  subgraph Adapter_Out
+    Jpa["JPA Adapter\n(OrdemServicoEntity, SpringData) "]
+    Email["Email/Webhook Adapter"]
+  end
 
-# Serviços
+  Controller -->|chama| PortsIn
+  PortsIn --> Services
+  Services --> Domain
+  Services -->|persiste| PortsOut
+  PortsOut --> Jpa
+  PortsOut --> Email
+```
 
-# 
+Componentes da aplicação
+- Domain: entidades e regras (src/main/java/.../domain).
+- Application: serviços e ports (src/main/java/.../application).
+- Interfaces: controllers e DTOs (src/main/java/.../interfaces).
+- Infrastructure: JPA entities, adapters, configuração externa (src/main/java/.../infrastructure).
+- Security: JWT filter e configuração (src/main/java/.../security).
 
-# Peças e insumos (com controle de estoque)
+---
 
-# 
+## 3. Infraestrutura provisionada (itens entregues)
 
-# Ordens de Serviço (OS) com todo o fluxo de atendimento, diagnóstico, orçamento e execução.
+- Dockerfile (raiz) — multi-stage build para a aplicação.
+- docker-compose.yml — ambiente local (app + banco).
+- k8s/ — manifests Kubernetes:
+  - `deployment.yaml` (Deployment)
+  - `service.yaml` (Service)
+  - `configmap.yaml` (ConfigMap)
+  - `secret.yaml` (Secret skeleton)
+  - `hpa.yaml` (Horizontal Pod Autoscaler)
+- infra/terraform/ — README e skeleton com instruções locais (kind) e recomendações cloud (EKS/GKE/AKS).
+- .github/workflows/ci-cd.yml — pipeline skeleton (build, test, docker build, aplicar manifests opcional).
 
-# 
+---
 
-# 🏗️ Arquitetura Utilizada
+## 4. Fluxo de deploy
 
-# 
+1. CI (GitHub Actions) executa build do projeto e testes automatizados.
+2. Image Docker é construída e opcionalmente push para registry.
+3. Em deploy automático/manual, manifestos em `k8s/` são aplicados ao cluster (kubectl apply -f k8s/).
+4. HPA ajusta réplicas automaticamente conforme métricas (por ex. CPU).
 
-# O projeto foi desenvolvido com base em DDD (Domain-Driven Design) e arquitetura hexagonal, separando claramente as responsabilidades por camadas:
+---
 
-# 
+## 5. Como executar localmente
 
-# src/main/java/com/exemplo/oficina
+Pré-requisitos mínimos:
+- Java 17+ ou 21 (conforme seu ambiente), Maven, Docker e Docker Compose.
 
-# ├── domain          -> Entidades e interfaces do domínio (regras de negócio)
+1) Build local (opcional):
 
-# ├── application     -> Casos de uso (serviços de aplicação)
+```bash
+mvn -B -DskipTests package
+```
 
-# ├── infrastructure  -> Implementações técnicas (JPA, banco de dados)
+2) Rodar via Docker Compose (app + DB):
 
-# └── interfaces
+```bash
+docker-compose up --build
+```
 
-# └── rest        -> Controladores REST e DTOs
+A API ficará disponível em http://localhost:8080
 
-# 
+Observações de profile:
+- O projeto tem um profile `docker` e perfis de ambiente (ver `src/main/resources`).
 
-# 
+---
 
-# Cada agregado tem seu próprio módulo:
+## 6. Deploy em Kubernetes (local com kind/minikube)
 
-# 
+Comandos resumidos:
 
-# cliente
+```bash
+# criar cluster local com kind
+kind create cluster --name tech-challenge
 
-# 
+# construir imagem e carregar no cluster kind
+docker build -t tech-challenge:latest .
+kind load docker-image tech-challenge:latest --name tech-challenge
 
-# veiculo
+# aplicar manifests
+kubectl apply -f k8s/
 
-# 
+# opcional: expor porta para acesso local
+kubectl port-forward svc/tech-challenge 8080:8080
+```
 
-# servico
+Notas:
+- Use `ConfigMap` e `Secret` para configurar propriedades e segredos no cluster.
+- Em cloud, substituir o Service por LoadBalancer/Ingress conforme provedor.
 
-# 
+---
 
-# peca
+## 7. Provisionamento com Terraform
 
-# 
+Local (recomendado para desenvolvimento):
+- Use `kind` para criar cluster local; o diretório `infra/terraform/` traz um README com instruções.
 
-# ordemservico
+Cloud (esqueleto):
+- Para produção, crie módulos Terraform para EKS/GKE/AKS e bancos gerenciados (RDS/Cloud SQL). Não inclua credenciais no repositório — use variáveis/arquivos externos.
 
-# 
+---
 
-# ⚙️ Tecnologias Utilizadas
+## 8. APIs, documentação e collection
 
-# 
+- OpenAPI/Swagger: a aplicação expõe documentação automática (quando executada) via `/swagger-ui.html` ou `/swagger-ui/index.html`.
+- Postman / Collection: inclua a collection exportada no repositório ou substitua o placeholder abaixo.
 
-# Java 21
+Postman Collection (placeholder): https://link-para-collection-exemplo
 
-# 
+---
 
-# Spring Boot 3
+## 9. CI/CD
 
-# 
+O workflow em `.github/workflows/ci-cd.yml` tem etapas para:
+- Checkout do código, setup JDK
+- Build e execução de testes (maven)
+- Build da imagem Docker (sem push por padrão)
+- Etapa opcional de deploy que aplica manifestos k8s quando `KUBE_CONFIG` estiver disponível como secret
 
-# Spring Data JPA
+---
 
-# 
+## 10. Testes
 
-# MySQL 8
+- Testes unitários e de integração podem ser executados com:
 
-# 
+```bash
+./mvnw test
+```
 
-# Maven
+- Nos testes a segurança é suavizada pelo `TestSecurityConfig` (profile `test`) para permitir execução das rotas administrativas sem necessidade de JWT. Em ambiente real, use autenticação e tokens.
 
-# 
+---
 
-# Lombok (opcional)
+## 11. Próximos passos recomendados
 
-# 
+- Melhorar cobertura de testes de integração usando Testcontainers (Postgres) na pipeline.
+- Automatizar push de imagens para um registry e configurar deploy automático no cluster.
+- Completar módulos Terraform para provedor cloud escolhido (EKS/GKE/AKS) e banco gerenciado.
+- Gerar e versionar Postman collection e vídeo demonstrativo.
 
-# Swagger / OpenAPI (documentação automática)
+---
 
-# 
+Se quiser, eu posso:
+- Gerar o `postman_collection.json` automaticamente a partir do OpenAPI (exigirá executar a aplicação localmente para exportar a spec), e adicionar ao repositório.
+- Atualizar o README com o link do vídeo e da collection assim que você me fornecer os links.
 
-# JUnit 5 (testes)
-
-# 
-
-# 🧩 Modelagem de Domínio
-
-# Entidades principais
-
-# Agregado	Responsabilidade
-
-# Cliente	Identificação de clientes (CPF/CNPJ)
-
-# Veículo	Associado ao cliente
-
-# Serviço	Catálogo de serviços prestados
-
-# Peça/Insumo	Controle de estoque e preços
-
-# Ordem de Serviço	Integra os demais agregados, controla status e fluxo
-
-# Fluxo da Ordem de Serviço
-
-# 
-
-# Identificar Cliente
-
-# 
-
-# Cadastrar Veículo (se necessário)
-
-# 
-
-# Criar Ordem de Serviço
-
-# 
-
-# Incluir Serviços e Peças
-
-# 
-
-# Gerar Orçamento
-
-# 
-
-# Aprovar ou Rejeitar Orçamento
-
-# 
-
-# Executar e Finalizar
-
-# 
-
-# Entregar o veículo
-
-# 
-
-# Estados possíveis da OS:
-
-# 
-
-# RECEBIDA → EM\_DIAGNOSTICO → AGUARDANDO\_APROVACAO →
-
-# EM\_EXECUCAO → FINALIZADA → ENTREGUE
-
-# 
-
-# 🗃️ Banco de Dados (MySQL)
-
-# 
-
-# Crie o banco antes de rodar a aplicação:
-
-# 
-
-# CREATE DATABASE oficina\_db CHARACTER SET utf8mb4 COLLATE utf8mb4\_unicode\_ci;
-
-# 
-
-# ⚙️ Configuração (application.properties)
-
-# spring.datasource.url=jdbc:mysql://localhost:3306/db\_db?useSSL=false\&serverTimezone=America/Sao\_Paulo
-
-# spring.datasource.username={SEU_USER}
-
-# spring.datasource.password={SUA_SENHA}
-
-# spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-# 
-
-# spring.jpa.hibernate.ddl-auto=update
-
-# spring.jpa.show-sql=true
-
-# spring.jpa.properties.hibernate.format\_sql=true
-
-# spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
-
-# 
-
-# spring.jackson.time-zone=America/Sao\_Paulo
-
-# spring.jpa.properties.hibernate.jdbc.time\_zone=America/Sao\_Paulo
-
-# 
-
-# server.port=8080
-
-# spring.application.name=oficina-api
-
-# 
-
-# 🚀 Como Rodar o Projeto
-
-# Pré-requisitos:
-
-# 
-
-# Java 21+
-
-# 
-
-# Maven 3.9+
-
-# 
-
-# MySQL 8
-
-# 
-
-# Passos:
-
-# 
-
-# Clone o repositório
-
-# 
-
-# git clone https://github.com/rafaellarosa07/tech-challenge.git
-
-# cd tech-challange
-
-# 
-
-# 
-
-# Configure o banco de dados MySQL conforme acima.
-
-# 
-
-# Rode o projeto:
-
-# 
-
-# mvn spring-boot:run
-
-# 
-
-# 
-
-# Acesse:
-
-# 
-
-# API: http://localhost:8080/api..
-
-# 
-
-# Swagger: http://localhost:8080/swagger-ui.html
-
-# 
-
-# 📚 Endpoints Principais
-
-# 🧍 Cliente
-
-# POST   /api/clientes
-
-# GET    /api/clientes
-
-# GET    /api/clientes/{id}
-
-# PUT    /api/clientes/{id}
-
-# DELETE /api/clientes/{id}
-
-# 
-
-# 🚘 Veículo
-
-# POST   /api/veiculos
-
-# GET    /api/veiculos
-
-# GET    /api/veiculos/{id}
-
-# PUT    /api/veiculos/{id}
-
-# DELETE /api/veiculos/{id}
-
-# 
-
-# 🧰 Serviço
-
-# POST   /api/servicos
-
-# GET    /api/servicos
-
-# GET    /api/servicos/{id}
-
-# PUT    /api/servicos/{id}
-
-# DELETE /api/servicos/{id}
-
-# 
-
-# ⚙️ Peça/Insumo
-
-# POST   /api/pecas
-
-# GET    /api/pecas
-
-# GET    /api/pecas/{id}
-
-# PUT    /api/pecas/{id}
-
-# DELETE /api/pecas/{id}
-
-# 
-
-# 🧾 Ordem de Serviço
-
-# POST   /api/os                   -> cria nova OS
-
-# POST   /api/os/{id}/servicos     -> adiciona serviços
-
-# POST   /api/os/{id}/pecas        -> adiciona peças
-
-# POST   /api/os/{id}/orcamento    -> gera orçamento
-
-# POST   /api/os/{id}/aprovar      -> aprova orçamento
-
-# POST   /api/os/{id}/finalizar    -> finaliza execução
-
-# POST   /api/os/{id}/entregar     -> registra entrega
-
-# GET    /api/os/{id}              -> busca por ID
-
-# GET    /api/os                   -> lista todas
-
-# DELETE /api/os/{id}              -> remove OS
-
-# 
-
-# 🧪 Testes Unitários
-
-# 
-
-# Os testes podem ser executados com:
-
-# 
-
-# mvn test
-
-# 
-
-# 
-
-# Exemplo de teste:
-
-# 
-
-# @Test
-
-# void deveGerarOrcamentoCorreto() {
-
-# OrdemServico os = new OrdemServico(1L, 1L);
-
-# os.incluirServico(new ItemServico(1L, "Troca de óleo", new BigDecimal("100")));
-
-# os.incluirPeca(new ItemPeca(1L, "Filtro", new BigDecimal("50"), 2));
-
-# 
-
-# &nbsp;   os.gerarOrcamento();
-
-# 
-
-# &nbsp;   assertEquals(new BigDecimal("200"), os.getTotalOrcamento());
-
-# &nbsp;   assertEquals(StatusOS.AGUARDANDO\_APROVACAO, os.getStatus());
-
-# }
-
-# 
-
-
-# 👩‍💻 Autora
-
-
-
-# Rafaella Aparecida Rosa Lima Torres
-
-# 📚 Pós-graduação FIAP — Software Architecture (SOAT)
-
-# 📆 Tech Challenge — Fase 1
-
+<!-- Fim do README -->
