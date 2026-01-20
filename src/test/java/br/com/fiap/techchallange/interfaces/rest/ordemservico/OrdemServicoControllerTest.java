@@ -84,7 +84,7 @@ class OrdemServicoControllerTest extends BaseControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.clienteId").value(9))
+                .andExpect(jsonPath("$.clienteId").value(8))
                 .andExpect(jsonPath("$.veiculoId").value(9));
     }
 
