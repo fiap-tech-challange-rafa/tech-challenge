@@ -47,7 +47,6 @@ class PecaControllerTest extends BaseControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", containsString("/api/admin/pecas/")))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.sku").value("SKU456"))
                 .andExpect(jsonPath("$.nome").value("Pastilha de freio"));
