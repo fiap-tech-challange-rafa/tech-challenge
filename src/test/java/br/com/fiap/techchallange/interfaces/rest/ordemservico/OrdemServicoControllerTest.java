@@ -6,7 +6,6 @@ import br.com.fiap.techchallange.domain.cliente.ClienteRepository;
 import br.com.fiap.techchallange.domain.cliente.Documento;
 import br.com.fiap.techchallange.domain.cliente.Email;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServico;
-import br.com.fiap.techchallange.domain.ordemservico.OrdemServicoRepository;
 import br.com.fiap.techchallange.domain.peca.Peca;
 import br.com.fiap.techchallange.domain.peca.PecaRepository;
 import br.com.fiap.techchallange.domain.servico.Servico;
@@ -62,14 +61,19 @@ class OrdemServicoControllerTest extends BaseControllerTest {
     @BeforeEach
     void setup() {
         repository.removerTodos();
+        pecaRepository.removerTodos();;
+        clienteRepository.removerTodos();
+        veiculoRepository.removerTodos();;
+
+
         cliente = new Cliente("João", new Documento("87198650074"), "11999999999", new Email("joao@email.com"));
         cliente = clienteRepository.salvar(cliente);
 
         veiculo = new Veiculo(cliente.getId(), new Placa("ABC1238"), "Fiat", "Uno", 2020);
         veiculo = veiculoRepository.salvar(veiculo);
 
-        peca = pecaRepository.salvar(new Peca("SKU123", "Filtro de óleo", new BigDecimal(50.0), 10));
-        servico = servicoRepository.salvar(new Servico("123", "as", new BigDecimal(10)));
+        peca = pecaRepository.salvar(new Peca("SKU123", "Filtro de óleo", new BigDecimal("50"), 10));
+        servico = servicoRepository.salvar(new Servico("123", "as", new BigDecimal("10")));
 
         os = new OrdemServico(cliente.getId(), veiculo.getId());
         os = repository.salvar(os);
@@ -84,8 +88,8 @@ class OrdemServicoControllerTest extends BaseControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.clienteId").value(8))
-                .andExpect(jsonPath("$.veiculoId").value(9));
+                .andExpect(jsonPath("$.clienteId").value(cliente.getId().intValue()))
+                .andExpect(jsonPath("$.veiculoId").value(veiculo.getId().intValue()));
     }
 
     @Test
@@ -138,8 +142,8 @@ class OrdemServicoControllerTest extends BaseControllerTest {
     void deveBuscarOrdemPorId() throws Exception {
         mockMvc.perform(get("/api/ordem-servico/{id}", os.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(os.getId()))
-                .andExpect(jsonPath("$.clienteId").value(11));
+                .andExpect(jsonPath("$.id").value(os.getId().intValue()))
+                .andExpect(jsonPath("$.clienteId").value(cliente.getId().intValue()));
     }
 
     @Test
