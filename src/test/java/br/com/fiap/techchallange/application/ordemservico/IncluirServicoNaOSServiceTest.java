@@ -1,5 +1,6 @@
 package br.com.fiap.techchallange.application.ordemservico;
 
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.*;
 import br.com.fiap.techchallange.domain.servico.Servico;
 import br.com.fiap.techchallange.domain.servico.ServicoRepository;
@@ -12,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IncluirServicoNaOSServiceTest {
 
-    private OrdemServicoRepository repository;
+    private OrdemServicoRepositoryPort repository;
     private IncluirServicoNaOSService service;
     private ServicoRepository servicoRepository;
 
     @BeforeEach
     void setUp() {
-        repository = mock(OrdemServicoRepository.class);
+        repository = mock(OrdemServicoRepositoryPort.class);
         servicoRepository = mock(ServicoRepository.class);
         service = new IncluirServicoNaOSService(repository,servicoRepository);
     }

@@ -2,7 +2,7 @@ package br.com.fiap.techchallange.interfaces.rest.ordemservico;
 
 import br.com.fiap.techchallange.application.cliente.BuscarClienteService;
 import br.com.fiap.techchallange.application.email.EnvioOrcamentoEmailService;
-import br.com.fiap.techchallange.application.ordemservico.*;
+import br.com.fiap.techchallange.application.ordemservico.port.in.*;
 import br.com.fiap.techchallange.domain.cliente.Cliente;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServico;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,25 +21,25 @@ import java.util.stream.Collectors;
 @Tag(name = "Ordens de Serviço", description = "Gerenciamento de ordens de serviço")
 public class OrdemServicoController {
 
-    private final CriarOrdemServicoService criar;
-    private final IncluirServicoNaOSService incluirServico;
-    private final IncluirPecaNaOSService incluirPeca;
-    private final GerarOrcamentoService gerarOrcamento;
-    private final AprovarOrcamentoService aprovarOrcamento;
-    private final FinalizarOrdemServicoService finalizar;
-    private final EntregarOrdemServicoService entregar;
-    private final BuscarOrdemService buscar;
+    private final CriarOrdemServicoPort criar;
+    private final IncluirServicoNaOSPort incluirServico;
+    private final IncluirPecaNaOSPort incluirPeca;
+    private final GerarOrcamentoPort gerarOrcamento;
+    private final AprovarOrcamentoPort aprovarOrcamento;
+    private final FinalizarOrdemServicoPort finalizar;
+    private final EntregarOrdemServicoPort entregar;
+    private final BuscarOrdemPort buscar;
     private final BuscarClienteService buscarClienteService;
     private final EnvioOrcamentoEmailService envioOrcamentoEmailService;
 
-    public OrdemServicoController(CriarOrdemServicoService criar,
-                                  IncluirServicoNaOSService incluirServico,
-                                  IncluirPecaNaOSService incluirPeca,
-                                  GerarOrcamentoService gerarOrcamento,
-                                  AprovarOrcamentoService aprovarOrcamento,
-                                  FinalizarOrdemServicoService finalizar,
-                                  EntregarOrdemServicoService entregar,
-                                  BuscarOrdemService buscar, BuscarClienteService buscarClienteService, EnvioOrcamentoEmailService envioOrcamentoEmailService) {
+    public OrdemServicoController(CriarOrdemServicoPort criar,
+                                  IncluirServicoNaOSPort incluirServico,
+                                  IncluirPecaNaOSPort incluirPeca,
+                                  GerarOrcamentoPort gerarOrcamento,
+                                  AprovarOrcamentoPort aprovarOrcamento,
+                                  FinalizarOrdemServicoPort finalizar,
+                                  EntregarOrdemServicoPort entregar,
+                                  BuscarOrdemPort buscar, BuscarClienteService buscarClienteService, EnvioOrcamentoEmailService envioOrcamentoEmailService) {
         this.criar = criar;
         this.incluirServico = incluirServico;
         this.incluirPeca = incluirPeca;
@@ -60,7 +60,8 @@ public class OrdemServicoController {
     @PostMapping
     public ResponseEntity<?> criar(@RequestBody CriarOrdemRequest req) {
         OrdemServico os = criar.executar(req.clienteId(), req.veiculoId());
-        return ResponseEntity.ok().body(OrdemServicoResponse.fromDomain(os));
+        // Retornar 201 Created com Location
+        return ResponseEntity.created(URI.create("/api/ordem-servico/" + os.getId())).body(OrdemServicoResponse.fromDomain(os));
     }
 
     @Operation(summary = "Inclui um serviço na OS")

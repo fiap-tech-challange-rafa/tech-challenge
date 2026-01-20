@@ -1,5 +1,6 @@
 package br.com.fiap.techchallange.application.ordemservico;
 
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.*;
 import br.com.fiap.techchallange.domain.peca.Peca;
 import br.com.fiap.techchallange.domain.peca.PecaRepository;
@@ -12,14 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IncluirPecaNaOSServiceTest {
 
-    private OrdemServicoRepository repository;
+    private OrdemServicoRepositoryPort repository;
     private PecaRepository pecaRepository;
 
     private IncluirPecaNaOSService service;
 
     @BeforeEach
     void setUp() {
-        repository = mock(OrdemServicoRepository.class);
+        repository = mock(OrdemServicoRepositoryPort.class);
         pecaRepository = mock(PecaRepository.class);
         service = new IncluirPecaNaOSService(repository,pecaRepository);
     }

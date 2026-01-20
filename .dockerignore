@@ -1,0 +1,12 @@
+target
+.git
+.gitignore
+.idea
+.vscode
+.mvn
+.m2
+*.iml
+*.class
+.DS_Store
+node_modules
+/.settings

@@ -1,8 +1,9 @@
 package br.com.fiap.techchallange.application.ordemservico;
 
+import br.com.fiap.techchallange.application.ordemservico.port.in.IncluirPecaNaOSPort;
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.ItemPeca;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServico;
-import br.com.fiap.techchallange.domain.ordemservico.OrdemServicoRepository;
 import br.com.fiap.techchallange.domain.peca.Peca;
 import br.com.fiap.techchallange.domain.peca.PecaRepository;
 import org.springframework.stereotype.Service;
@@ -11,16 +12,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
-public class IncluirPecaNaOSService {
+public class IncluirPecaNaOSService implements IncluirPecaNaOSPort {
 
-    private final OrdemServicoRepository repository;
+    private final OrdemServicoRepositoryPort repository;
     private final PecaRepository pecaRepository;
 
-    public IncluirPecaNaOSService(OrdemServicoRepository repository, PecaRepository pecaRepository) {
+    public IncluirPecaNaOSService(OrdemServicoRepositoryPort repository, PecaRepository pecaRepository) {
         this.repository = repository;
         this.pecaRepository = pecaRepository;
     }
 
+    @Override
     @Transactional
     public OrdemServico executar(Long osId, Long pecaId, Integer quantidade) {
         OrdemServico os = repository.buscarPorId(osId)

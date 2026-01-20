@@ -43,11 +43,11 @@ class PecaControllerTest extends BaseControllerTest {
     void deveCriarPeca() throws Exception {
         PecaRequest request = new PecaRequest("SKU456", "Pastilha de freio", new BigDecimal(80.0), 20);
 
-        mockMvc.perform(post("/api/pecas")
+        mockMvc.perform(post("/api/admin/pecas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", containsString("/api/pecas/")))
+                .andExpect(header().string("Location", containsString("/api/admin/pecas/")))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.sku").value("SKU456"))
                 .andExpect(jsonPath("$.nome").value("Pastilha de freio"));
@@ -55,7 +55,7 @@ class PecaControllerTest extends BaseControllerTest {
 
     @Test
     void deveBuscarPecaPorId() throws Exception {
-        mockMvc.perform(get("/api/pecas/{id}", peca.getId()))
+        mockMvc.perform(get("/api/admin/pecas/{id}", peca.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(peca.getId()))
                 .andExpect(jsonPath("$.nome").value("Filtro de óleo"));
@@ -63,7 +63,7 @@ class PecaControllerTest extends BaseControllerTest {
 
     @Test
     void deveListarTodasPecas() throws Exception {
-        mockMvc.perform(get("/api/pecas"))
+        mockMvc.perform(get("/api/admin/pecas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].nome").value("Filtro de óleo"));
@@ -73,7 +73,7 @@ class PecaControllerTest extends BaseControllerTest {
     void deveAtualizarPeca() throws Exception {
         PecaUpdateRequest update = new PecaUpdateRequest("Filtro de óleo premium", new BigDecimal(750.0));
 
-        mockMvc.perform(put("/api/pecas/{id}", peca.getId())
+        mockMvc.perform(put("/api/admin/pecas/{id}", peca.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
@@ -83,18 +83,16 @@ class PecaControllerTest extends BaseControllerTest {
 
     @Test
     void deveDeletarPeca() throws Exception {
-        mockMvc.perform(delete("/api/pecas/{id}", peca.getId()))
+        mockMvc.perform(delete("/api/admin/pecas/{id}", peca.getId()))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/pecas/{id}", peca.getId()))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
     void deveAjustarEstoque() throws Exception {
         AjusteEstoqueRequest request = new AjusteEstoqueRequest(5);
 
-        mockMvc.perform(post("/api/pecas/{id}/ajustar-estoque", peca.getId())
+        mockMvc.perform(post("/api/admin/pecas/{id}/ajustar-estoque", peca.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

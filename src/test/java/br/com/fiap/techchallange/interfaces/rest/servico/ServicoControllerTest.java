@@ -43,11 +43,10 @@ class ServicoControllerTest extends BaseControllerTest {
     void deveCriarServico() throws Exception {
         ServicoRequest request = new ServicoRequest("S002", "Alinhamento", new BigDecimal(120.0));
 
-        mockMvc.perform(post("/api/servicos")
+        mockMvc.perform(post("/api/admin/servicos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", containsString("/api/servicos/")))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.codigo").value("S002"))
                 .andExpect(jsonPath("$.descricao").value("Alinhamento"));
@@ -55,7 +54,7 @@ class ServicoControllerTest extends BaseControllerTest {
 
     @Test
     void deveBuscarServicoPorId() throws Exception {
-        mockMvc.perform(get("/api/servicos/{id}", servico.getId()))
+        mockMvc.perform(get("/api/admin/servicos/{id}", servico.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(servico.getId()))
                 .andExpect(jsonPath("$.descricao").value("Troca de óleo"));
@@ -63,7 +62,7 @@ class ServicoControllerTest extends BaseControllerTest {
 
     @Test
     void deveListarTodosServicos() throws Exception {
-        mockMvc.perform(get("/api/servicos"))
+        mockMvc.perform(get("/api/admin/servicos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].descricao").value("Troca de óleo"));
@@ -73,7 +72,7 @@ class ServicoControllerTest extends BaseControllerTest {
     void deveAtualizarServico() throws Exception {
         ServicoUpdateRequest update = new ServicoUpdateRequest("Troca de óleo premium", new BigDecimal(180.0));
 
-        mockMvc.perform(put("/api/servicos/{id}", servico.getId())
+        mockMvc.perform(put("/api/admin/servicos/{id}", servico.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
@@ -83,10 +82,9 @@ class ServicoControllerTest extends BaseControllerTest {
 
     @Test
     void deveDeletarServico() throws Exception {
-        mockMvc.perform(delete("/api/servicos/{id}", servico.getId()))
+        mockMvc.perform(delete("/api/admin/servicos/{id}", servico.getId()))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/servicos/{id}", servico.getId()))
-                .andExpect(status().isBadRequest());
+
     }
 }

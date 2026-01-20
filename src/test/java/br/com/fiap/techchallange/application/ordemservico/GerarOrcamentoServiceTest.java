@@ -1,5 +1,6 @@
 package br.com.fiap.techchallange.application.ordemservico;
 
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServico;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,12 +11,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GerarOrcamentoServiceTest {
 
-    private OrdemServicoRepository repository;
+    private OrdemServicoRepositoryPort repository;
     private GerarOrcamentoService service;
 
     @BeforeEach
     void setUp() {
-        repository = mock(OrdemServicoRepository.class);
+        repository = mock(OrdemServicoRepositoryPort.class);
         service = new GerarOrcamentoService(repository);
     }
 

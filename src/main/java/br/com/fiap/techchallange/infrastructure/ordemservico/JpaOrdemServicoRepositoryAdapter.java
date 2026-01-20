@@ -1,5 +1,6 @@
 package br.com.fiap.techchallange.infrastructure.ordemservico;
 
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.*;
 import org.springframework.stereotype.Repository;
 
@@ -8,7 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-public class JpaOrdemServicoRepositoryAdapter implements OrdemServicoRepository {
+public class JpaOrdemServicoRepositoryAdapter implements OrdemServicoRepositoryPort {
 
     private final SpringDataOrdemServicoRepository jpa;
 

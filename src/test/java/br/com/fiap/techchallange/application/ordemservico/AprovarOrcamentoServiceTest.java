@@ -1,5 +1,6 @@
 package br.com.fiap.techchallange.application.ordemservico;
 
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServico;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServicoRepository;
 import br.com.fiap.techchallange.domain.ordemservico.StatusOS;
@@ -11,12 +12,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AprovarOrcamentoServiceTest {
 
-    private OrdemServicoRepository repository;
+    private OrdemServicoRepositoryPort repository;
     private AprovarOrcamentoService service;
 
     @BeforeEach
     void setUp() {
-        repository = mock(OrdemServicoRepository.class);
+        repository = mock(OrdemServicoRepositoryPort.class);
         service = new AprovarOrcamentoService(repository);
     }
 

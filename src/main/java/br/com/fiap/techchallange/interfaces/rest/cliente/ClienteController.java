@@ -41,7 +41,7 @@ public class ClienteController {
     public ResponseEntity<ClienteResponse> criar(@RequestBody ClienteRequest req) {
         Cliente c = cadastrar.executar(req.nome(), req.documento(), req.telefone(), req.email());
         ClienteResponse resp = ClienteResponse.fromDomain(c);
-        return ResponseEntity.created(URI.create("/api/clientes/" + resp.id())).body(resp);
+        return ResponseEntity.created(URI.create("/api/admin/clientes/" + resp.id())).body(resp);
     }
 
     @Operation(summary = "Busca um cliente pelo ID")

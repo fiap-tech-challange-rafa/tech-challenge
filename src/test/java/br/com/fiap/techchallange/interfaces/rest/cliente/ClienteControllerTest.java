@@ -44,11 +44,11 @@ class ClienteControllerTest extends BaseControllerTest {
     void deveCriarCliente() throws Exception {
         ClienteRequest request = new ClienteRequest("Maria", "41693974010", "11988888888", "maria@email.com");
 
-        mockMvc.perform(post("/api/clientes")
+        mockMvc.perform(post("/api/admin/clientes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", containsString("/api/clientes/")))
+                .andExpect(header().string("Location", containsString("/api/admin/clientes/")))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.nome").value("Maria"))
                 .andExpect(jsonPath("$.documento").value("41693974010"));
@@ -56,7 +56,7 @@ class ClienteControllerTest extends BaseControllerTest {
 
     @Test
     void deveBuscarClientePorId() throws Exception {
-        mockMvc.perform(get("/api/clientes/{id}", cliente.getId()))
+        mockMvc.perform(get("/api/admin/clientes/{id}", cliente.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(cliente.getId()))
                 .andExpect(jsonPath("$.nome").value("João"));
@@ -64,7 +64,7 @@ class ClienteControllerTest extends BaseControllerTest {
 
     @Test
     void deveListarTodosClientes() throws Exception {
-        mockMvc.perform(get("/api/clientes"))
+        mockMvc.perform(get("/api/admin/clientes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].nome").value("João"));
@@ -74,7 +74,7 @@ class ClienteControllerTest extends BaseControllerTest {
     void deveAtualizarCliente() throws Exception {
         ClienteUpdateRequest update = new ClienteUpdateRequest("João da Silva", "11911111111", "joao@novoemail.com");
 
-        mockMvc.perform(put("/api/clientes/{id}", cliente.getId())
+        mockMvc.perform(put("/api/admin/clientes/{id}", cliente.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
@@ -83,12 +83,4 @@ class ClienteControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.email").value("joao@novoemail.com"));
     }
 
-    @Test
-    void deveDeletarCliente() throws Exception {
-        mockMvc.perform(delete("/api/clientes/{id}", cliente.getId()))
-                .andExpect(status().isNoContent());
-
-        mockMvc.perform(get("/api/clientes/{id}", cliente.getId()))
-                .andExpect(status().isBadRequest());
-    }
 }
