@@ -82,7 +82,7 @@ class OrdemServicoControllerTest extends BaseControllerTest {
         mockMvc.perform(post("/api/ordem-servico")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.clienteId").value(9))
                 .andExpect(jsonPath("$.veiculoId").value(9));
