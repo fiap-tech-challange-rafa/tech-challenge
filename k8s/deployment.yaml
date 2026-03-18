@@ -2,10 +2,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tech-challenge
+  namespace: default
   labels:
     app: tech-challenge
+    version: "1.0"
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: tech-challenge
@@ -13,27 +20,108 @@ spec:
     metadata:
       labels:
         app: tech-challenge
+        version: "1.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
+      # Service account para RBAC
+      serviceAccountName: tech-challenge
+
+      # Pod security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
       containers:
         - name: app
           image: tech-challenge:latest
           imagePullPolicy: IfNotPresent
+
+          # Porta da aplicação
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          # Variáveis de ambiente
           envFrom:
             - configMapRef:
                 name: tech-challenge-config
             - secretRef:
                 name: tech-challenge-secrets
+
+          # Recursos (requests e limits)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          # Probes de saúde
           livenessProbe:
             httpGet:
-              path: /actuator/health
-              port: 8080
+              path: /actuator/health/liveness
+              port: http
             initialDelaySeconds: 30
-            periodSeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
           readinessProbe:
             httpGet:
-              path: /actuator/health
-              port: 8080
+              path: /actuator/health/readiness
+              port: http
             initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+
+          # Startup probe (para aplicações lentas)
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 0
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+
+          # Security context do container
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+          # Volume mounts
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      # Volumes
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      # Tolerations para scheduled nodes
+      tolerations: []
+
+      # Affinity para distribuição de pods
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - tech-challenge
+                topologyKey: kubernetes.io/hostname

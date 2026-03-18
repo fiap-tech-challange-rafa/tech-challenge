@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tech-challenge-config
+  namespace: default
+data:
+  # Spring Boot application properties
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/tech_challenge"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.PostgreSQLDialect"
+
+  # Logging configuration
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_BR_COM_FIAP: "DEBUG"
+
+  # Server configuration
+  SERVER_SERVLET_CONTEXT_PATH: "/"
+  SERVER_COMPRESSION_ENABLED: "true"
+
+  # Actuator configuration for health checks
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "when-authorized"
+
+  # Application-specific settings
+  APP_NAME: "Tech Challenge"
+  APP_VERSION: "0.0.1"

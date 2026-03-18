@@ -24,6 +24,7 @@ class AprovarOrcamentoServiceTest {
     @Test
     void deveAprovarOrcamento() {
         OrdemServico os = new OrdemServico(1L, 2L);
+        os.gerarOrcamento(); // Coloca o status em AGUARDANDO_APROVACAO
         when(repository.buscarPorId(1L)).thenReturn(Optional.of(os));
         when(repository.salvar(any())).thenReturn(os);
 

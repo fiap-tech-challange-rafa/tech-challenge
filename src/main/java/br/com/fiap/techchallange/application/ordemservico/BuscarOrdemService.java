@@ -4,6 +4,8 @@ import br.com.fiap.techchallange.application.ordemservico.port.in.BuscarOrdemPor
 import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.ordemservico.OrdemServico;
 import br.com.fiap.techchallange.domain.ordemservico.StatusOS;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -21,12 +23,14 @@ public class BuscarOrdemService implements BuscarOrdemPort {
     }
 
     @Override
+    @Cacheable(value = "ordem-servico", key = "#id", unless = "#result == null")
     public OrdemServico porId(Long id) {
         return repository.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Ordem de Serviço não encontrada: " + id));
     }
 
     @Override
+    @Cacheable(value = "ordem-servico-lista", unless = "#result == null || #result.isEmpty()")
     public List<OrdemServico> listarTodos() {
         List<OrdemServico> all = repository.listarTodos();
         // Excluir OS finalizadas e entregues da listagem (filtragem lógica)
@@ -39,6 +43,7 @@ public class BuscarOrdemService implements BuscarOrdemPort {
     }
 
     @Override
+    @CacheEvict(value = "ordem-servico", key = "#id")
     public void remover(Long id) {
         Optional<OrdemServico> maybe = repository.buscarPorId(id);
         OrdemServico os = maybe.orElseThrow(() -> new IllegalArgumentException("Ordem de Serviço não encontrada: " + id));

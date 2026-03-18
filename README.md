@@ -22,6 +22,8 @@ Principais objetivos atendidos nesta fase:
 
 Arquitetura: Hexagonal (Ports & Adapters)
 
+**[→ Visualizar documento técnico completo: ARCHITECTURE.md](./ARCHITECTURE.md)**
+
 - Controllers (adapters in) → Ports (application.port.in) → Application Services (casos de uso) → Ports (application.port.out) → Repositories / Adapters out (JPA, external clients)
 - Domain (pure business rules) no centro (entidades e regras de negócio).
 
@@ -182,6 +184,51 @@ O workflow em `.github/workflows/ci-cd.yml` tem etapas para:
 - Automatizar push de imagens para um registry e configurar deploy automático no cluster.
 - Completar módulos Terraform para provedor cloud escolhido (EKS/GKE/AKS) e banco gerenciado.
 - Gerar e versionar Postman collection e vídeo demonstrativo.
+
+---
+
+## 12. Melhorias Implementadas (Fase 2 - Revisão)
+
+### 12.1 Validações de Transição de Estado
+- ✅ Adicionado validação de pré-condições nos métodos `aprovarOrcamento()`, `rejeitarOrcamento()`, `finalizar()` e `entregar()` em `OrdemServico.java`
+- ✅ Lança `IllegalStateException` se a transição não for válida
+- ✅ Exemplos:
+  - Só pode aprovar se status == `AGUARDANDO_APROVACAO`
+  - Só pode rejeitar se status == `AGUARDANDO_APROVACAO`
+  - Só pode finalizar se status == `EM_EXECUCAO`
+  - Só pode entregar se status == `FINALIZADA`
+
+### 12.2 HTTP Methods Corretos (REST)
+- ✅ Endpoint de aprovação: `@PutMapping("/{id}/aprovar")` (era `@GetMapping`)
+- ✅ Endpoint de rejeição (novo): `@PutMapping("/{id}/rejeitar")`
+- ✅ Resposta melhorada: retorna `OrdemServicoResponse` completo em vez de string
+
+### 12.3 Novo Endpoint de Rejeição
+- ✅ Port: `RejeitarOrcamentoPort` 
+- ✅ Service: `RejeitarOrcamentoService`
+- ✅ Controller: `PUT /api/ordem-servico/{id}/rejeitar`
+- ✅ Testes: `RejeitarOrcamentoServiceTest` com 3 casos de teste
+
+### 12.4 Testes Corrigidos
+- ✅ `AprovarOrcamentoServiceTest`: Coloca OS em `AGUARDANDO_APROVACAO` antes de testar
+- ✅ `FinalizarOrdemServicoServiceTest`: Coloca OS em `EM_EXECUCAO` antes de testar
+- ✅ `EntregarOrdemServicoServiceTest`: Coloca OS em `FINALIZADA` antes de testar
+- ✅ `OrdemServicoTest`: Ajustado fluxo de transições
+- ✅ `OrdemServicoControllerTest`: Cria OS com estado correto para cada operação
+- ✅ `VeiculoControllerTest`: Limpa OrdenServicos antes de remover veículos (evita constraint violation)
+
+### 12.5 Documentação Técnica
+- ✅ Arquivo `ARCHITECTURE.md` com:
+  - Diagrama de arquitetura hexagonal
+  - Máquina de estados com transições válidas
+  - Fluxo de deploy end-to-end
+  - Detalhamento de Kubernetes manifests
+  - Decisões arquiteturais
+  - Próximos passos
+
+---
+
+Se quiser, eu posso:
 
 ---
 

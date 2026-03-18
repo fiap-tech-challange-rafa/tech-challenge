@@ -60,6 +60,7 @@ class OrdemServicoTest {
     @Test
     void deveAprovarOrcamentoEAjustarStatus() {
         OrdemServico os = new OrdemServico(1L, 1L);
+        os.gerarOrcamento(); // Colocar em AGUARDANDO_APROVACAO
         os.aprovarOrcamento();
 
         assertEquals(StatusOS.EM_EXECUCAO, os.getStatus());
@@ -68,6 +69,7 @@ class OrdemServicoTest {
     @Test
     void deveRejeitarOrcamentoEAjustarStatus() {
         OrdemServico os = new OrdemServico(1L, 1L);
+        os.gerarOrcamento(); // Colocar em AGUARDANDO_APROVACAO
         os.rejeitarOrcamento();
 
         assertEquals(StatusOS.CANCELADA, os.getStatus());
@@ -76,6 +78,8 @@ class OrdemServicoTest {
     @Test
     void deveFinalizarEAjustarStatus() {
         OrdemServico os = new OrdemServico(1L, 1L);
+        os.gerarOrcamento(); // Colocar em AGUARDANDO_APROVACAO
+        os.aprovarOrcamento(); // Colocar em EM_EXECUCAO
         os.finalizar();
 
         assertEquals(StatusOS.FINALIZADA, os.getStatus());
@@ -84,6 +88,9 @@ class OrdemServicoTest {
     @Test
     void deveEntregarEAjustarStatus() {
         OrdemServico os = new OrdemServico(1L, 1L);
+        os.gerarOrcamento(); // Colocar em AGUARDANDO_APROVACAO
+        os.aprovarOrcamento(); // Colocar em EM_EXECUCAO
+        os.finalizar(); // Colocar em FINALIZADA
         os.entregar();
 
         assertEquals(StatusOS.ENTREGUE, os.getStatus());
