@@ -1,239 +1,228 @@
-# Tech Challenge — Fase 2 (Evolução)
+# Tech Challenge
 
-Este repositório contém a evolução da aplicação da Fase 1 para a Fase 2 do POS TECX Tech Challenge. O objetivo desta fase é tornar a aplicação mais resiliente, testável e escalável, aplicando arquitetura hexagonal, testes automatizados, containerização, manifestos Kubernetes, IaC (Terraform) e CI/CD.
-
----
-
-## 1. Descrição da solução e objetivos
-
-Solução: uma API REST para gestão de oficina (clientes, veículos, serviços, peças e ordens de serviço) refatorada com Arquitetura Hexagonal (Ports & Adapters). A aplicação expõe APIs para criar e acompanhar Ordens de Serviço (OS), gerar e aprovar orçamentos, realizar serviços, controlar peças e registrar entrega.
-
-Principais objetivos atendidos nesta fase:
-- Aplicar Clean Code e Arquitetura Hexagonal (separação clara entre domain, application e adapters).
-- Implementar ports (interfaces) e adapters (JPA, controllers) para facilitar testes e manutenção.
-- Cobertura de testes automatizados (unitários e integração) para fluxos críticos.
-- Containerização via Docker e execução local via docker-compose.
-- Manifestos Kubernetes (Deployment, Service, ConfigMap, Secret, HPA) para orquestração.
-- Skeleton de Terraform para provisionamento (local/cloud) e pipeline CI/CD (GitHub Actions) para build/test/deploy.
+Esse repositório é a aplicação principal de uma plataforma de gestão de oficina. Criei uma arquitetura bem pensada, escalável e pronta pra produção, separando responsabilidades em 4 repositórios diferentes.
 
 ---
 
-## 2. Desenho da arquitetura proposta
+## O que criei
 
-Arquitetura: Hexagonal (Ports & Adapters)
+Basicamente, construí uma plataforma completa de gestão de oficina com:
 
-**[→ Visualizar documento técnico completo: ARCHITECTURE.md](./ARCHITECTURE.md)**
+- **Autenticação serverless** (Lambda + Node.js) — valida CPF e gera token JWT
+- **Aplicação principal** (Spring Boot) — expõe as APIs protegidas
+- **Infraestrutura em Kubernetes** (EKS) — tudo escalável e resiliente
+- **Database gerenciado** (RDS PostgreSQL) — Multi-AZ, backups automáticos, tudo securizado
+- **Monitoramento** (Prometheus + Grafana) — pra saber o que tá acontecendo em tempo real
 
-- Controllers (adapters in) → Ports (application.port.in) → Application Services (casos de uso) → Ports (application.port.out) → Repositories / Adapters out (JPA, external clients)
-- Domain (pure business rules) no centro (entidades e regras de negócio).
+---
 
-Diagrama (Mermaid):
+## Os 4 Repositórios
 
-```mermaid
-flowchart LR
-  subgraph Adapter_In
-    Controller["REST Controllers\n(api/ordem-servico, api/admin/...)"]
-  end
-  subgraph Application
-    PortsIn["Ports (in)\nCriarOrdem, BuscarOrdem,..."]
-    Services["Use-Cases / Services"]
-    PortsOut["Ports (out)\nRepositoryPort, NotifierPort"]
-  end
-  subgraph Domain
-    Domain["Entities & Rules\nOrdemServico, ItemServico, ItemPeca..."]
-  end
-  subgraph Adapter_Out
-    Jpa["JPA Adapter\n(OrdemServicoEntity, SpringData) "]
-    Email["Email/Webhook Adapter"]
-  end
+| Nome | O que faz |
+|------|-----------|
+| **auth-lambda** | Autentica usuários via CPF e gera JWT |
+| **infra-kubernetes** | Provisiona cluster EKS com Terraform |
+| **infra-database** | Cria RDS PostgreSQL com Terraform |
+| **tech-challenge-app** | Aplicação principal em Spring Boot (este repositório) |
 
-  Controller -->|chama| PortsIn
-  PortsIn --> Services
-  Services --> Domain
-  Services -->|persiste| PortsOut
-  PortsOut --> Jpa
-  PortsOut --> Email
+---
+
+## Arquitetura Rápida
+
+```
+Cliente
+   │
+   ├─ POST /auth/authenticate (CPF)
+   │  └─ Lambda (auth-lambda) → RDS lookup → JWT
+   │
+   └─ GET /api/ordens (com JWT)
+      └─ Kubernetes (EKS)
+         ├─ Spring Boot app (3 replicas)
+         ├─ Auto-scaling (2-10 pods)
+         └─ RDS PostgreSQL
 ```
 
-Componentes da aplicação
-- Domain: entidades e regras (src/main/java/.../domain).
-- Application: serviços e ports (src/main/java/.../application).
-- Interfaces: controllers e DTOs (src/main/java/.../interfaces).
-- Infrastructure: JPA entities, adapters, configuração externa (src/main/java/.../infrastructure).
-- Security: JWT filter e configuração (src/main/java/.../security).
+A separação de responsabilidades foi feita usando Arquitetura Hexagonal. Regras de negócio no center, tudo else é plugável.
 
 ---
 
-## 3. Infraestrutura provisionada (itens entregues)
+## Como rodar localmente
 
-- Dockerfile (raiz) — multi-stage build para a aplicação.
-- docker-compose.yml — ambiente local (app + banco).
-- k8s/ — manifests Kubernetes:
-  - `deployment.yaml` (Deployment)
-  - `service.yaml` (Service)
-  - `configmap.yaml` (ConfigMap)
-  - `secret.yaml` (Secret skeleton)
-  - `hpa.yaml` (Horizontal Pod Autoscaler)
-- infra/terraform/ — README e skeleton com instruções locais (kind) e recomendações cloud (EKS/GKE/AKS).
-- .github/workflows/ci-cd.yml — pipeline skeleton (build, test, docker build, aplicar manifests opcional).
+### Pre-requisitos
+- Java 21
+- Maven
+- Docker + Docker Compose
 
----
-
-## 4. Fluxo de deploy
-
-1. CI (GitHub Actions) executa build do projeto e testes automatizados.
-2. Image Docker é construída e opcionalmente push para registry.
-3. Em deploy automático/manual, manifestos em `k8s/` são aplicados ao cluster (kubectl apply -f k8s/).
-4. HPA ajusta réplicas automaticamente conforme métricas (por ex. CPU).
-
----
-
-## 5. Como executar localmente
-
-Pré-requisitos mínimos:
-- Java 17+ ou 21 (conforme seu ambiente), Maven, Docker e Docker Compose.
-
-1) Build local (opcional):
-
-```bash
-mvn -B -DskipTests package
-```
-
-2) Rodar via Docker Compose (app + DB):
+### Opção 1: Docker Compose (mais fácil)
 
 ```bash
 docker-compose up --build
 ```
 
-A API ficará disponível em http://localhost:8080
+Depois acessa:
+- API: http://localhost:8080
+- Swagger: http://localhost:8080/swagger-ui.html
+- Metrics: http://localhost:8080/actuator/prometheus
 
-Observações de profile:
-- O projeto tem um profile `docker` e perfis de ambiente (ver `src/main/resources`).
-
----
-
-## 6. Deploy em Kubernetes (local com kind/minikube)
-
-Comandos resumidos:
+### Opção 2: Build manual
 
 ```bash
-# criar cluster local com kind
-kind create cluster --name tech-challenge
+mvn clean package -DskipTests
+java -jar target/tech-challenge-0.0.1-SNAPSHOT.jar
+```
 
-# construir imagem e carregar no cluster kind
+### Opção 3: Kubernetes local (kind)
+
+```bash
+kind create cluster --name tech-challenge
 docker build -t tech-challenge:latest .
 kind load docker-image tech-challenge:latest --name tech-challenge
-
-# aplicar manifests
 kubectl apply -f k8s/
-
-# opcional: expor porta para acesso local
-kubectl port-forward svc/tech-challenge 8080:8080
+kubectl port-forward svc/tech-challenge-service 8080:8080
 ```
 
-Notas:
-- Use `ConfigMap` e `Secret` para configurar propriedades e segredos no cluster.
-- Em cloud, substituir o Service por LoadBalancer/Ingress conforme provedor.
+---
+
+## Os Manifests do Kubernetes
+
+Tá tudo em `k8s/`:
+- `namespace.yaml` — cria namespace isolado
+- `configmap.yaml` — configurações da app
+- `secret.yaml` — credenciais (senha DB, JWT secret, etc)
+- `deployment.yaml` — 3 replicas, com health checks
+- `service.yaml` — expõe a app via LoadBalancer
+- `ingress.yaml` — Nginx pra rotear requisições
+- `hpa.yaml` — auto-scaling automático (2-10 pods)
+- `rbac.yaml` — permissões dentro do K8s
+- `servicemonitor.yaml` — Prometheus coleta métricas da app
 
 ---
 
-## 7. Provisionamento com Terraform
+## CI/CD
 
-Local (recomendado para desenvolvimento):
-- Use `kind` para criar cluster local; o diretório `infra/terraform/` traz um README com instruções.
+Usei GitHub Actions pra automatizar tudo:
 
-Cloud (esqueleto):
-- Para produção, crie módulos Terraform para EKS/GKE/AKS e bancos gerenciados (RDS/Cloud SQL). Não inclua credenciais no repositório — use variáveis/arquivos externos.
+1. **build-test.yml** — roda quando você faz push
+   - Build da app
+   - Executa testes
+   - Análise de código
 
----
+2. **build-push-docker.yml** — quando passa na main/develop
+   - Faz build da imagem Docker
+   - Push pro registry
 
-## 8. APIs, documentação e collection
-
-- OpenAPI/Swagger: a aplicação expõe documentação automática (quando executada) via `/swagger-ui.html` ou `/swagger-ui/index.html`.
-- Postman / Collection: inclua a collection exportada no repositório ou substitua o placeholder abaixo.
-
-Postman Collection (placeholder): https://link-para-collection-exemplo
-
----
-
-## 9. CI/CD
-
-O workflow em `.github/workflows/ci-cd.yml` tem etapas para:
-- Checkout do código, setup JDK
-- Build e execução de testes (maven)
-- Build da imagem Docker (sem push por padrão)
-- Etapa opcional de deploy que aplica manifestos k8s quando `KUBE_CONFIG` estiver disponível como secret
+3. **deploy-k8s.yml** — deploy automático
+   - Aplica os manifests no cluster
+   - Verifica se rolou tudo certo
 
 ---
 
-## 10. Testes
+## As APIs
 
-- Testes unitários e de integração podem ser executados com:
+### Autenticação
 
 ```bash
-./mvnw test
+POST /auth/authenticate
+{
+  "cpf": "12345678901",
+  "clientId": 123
+}
+
+Response:
+{
+  "token": "eyJhbGc...",
+  "expiresIn": 3600,
+  "type": "Bearer"
+}
 ```
 
-- Nos testes a segurança é suavizada pelo `TestSecurityConfig` (profile `test`) para permitir execução das rotas administrativas sem necessidade de JWT. Em ambiente real, use autenticação e tokens.
+### Ordens (protegidas com JWT)
+
+```bash
+# Listar
+GET /api/ordens-servico
+Authorization: Bearer <seu-token>
+
+# Criar
+POST /api/ordens-servico
+{
+  "clienteId": 123,
+  "veiculoId": 456,
+  "descricaoProblema": "Pneu furado"
+}
+
+# Atualizar status
+PUT /api/ordens-servico/{id}/aprovar
+PUT /api/ordens-servico/{id}/rejeitar
+```
+
+Tá tudo documentado no Swagger — é só acessar http://localhost:8080/swagger-ui.html
 
 ---
 
-## 11. Próximos passos recomendados
+## Testes
 
-- Melhorar cobertura de testes de integração usando Testcontainers (Postgres) na pipeline.
-- Automatizar push de imagens para um registry e configurar deploy automático no cluster.
-- Completar módulos Terraform para provedor cloud escolhido (EKS/GKE/AKS) e banco gerenciado.
-- Gerar e versionar Postman collection e vídeo demonstrativo.
+```bash
+mvn test
+```
 
----
-
-## 12. Melhorias Implementadas (Fase 2 - Revisão)
-
-### 12.1 Validações de Transição de Estado
-- ✅ Adicionado validação de pré-condições nos métodos `aprovarOrcamento()`, `rejeitarOrcamento()`, `finalizar()` e `entregar()` em `OrdemServico.java`
-- ✅ Lança `IllegalStateException` se a transição não for válida
-- ✅ Exemplos:
-  - Só pode aprovar se status == `AGUARDANDO_APROVACAO`
-  - Só pode rejeitar se status == `AGUARDANDO_APROVACAO`
-  - Só pode finalizar se status == `EM_EXECUCAO`
-  - Só pode entregar se status == `FINALIZADA`
-
-### 12.2 HTTP Methods Corretos (REST)
-- ✅ Endpoint de aprovação: `@PutMapping("/{id}/aprovar")` (era `@GetMapping`)
-- ✅ Endpoint de rejeição (novo): `@PutMapping("/{id}/rejeitar")`
-- ✅ Resposta melhorada: retorna `OrdemServicoResponse` completo em vez de string
-
-### 12.3 Novo Endpoint de Rejeição
-- ✅ Port: `RejeitarOrcamentoPort` 
-- ✅ Service: `RejeitarOrcamentoService`
-- ✅ Controller: `PUT /api/ordem-servico/{id}/rejeitar`
-- ✅ Testes: `RejeitarOrcamentoServiceTest` com 3 casos de teste
-
-### 12.4 Testes Corrigidos
-- ✅ `AprovarOrcamentoServiceTest`: Coloca OS em `AGUARDANDO_APROVACAO` antes de testar
-- ✅ `FinalizarOrdemServicoServiceTest`: Coloca OS em `EM_EXECUCAO` antes de testar
-- ✅ `EntregarOrdemServicoServiceTest`: Coloca OS em `FINALIZADA` antes de testar
-- ✅ `OrdemServicoTest`: Ajustado fluxo de transições
-- ✅ `OrdemServicoControllerTest`: Cria OS com estado correto para cada operação
-- ✅ `VeiculoControllerTest`: Limpa OrdenServicos antes de remover veículos (evita constraint violation)
-
-### 12.5 Documentação Técnica
-- ✅ Arquivo `ARCHITECTURE.md` com:
-  - Diagrama de arquitetura hexagonal
-  - Máquina de estados com transições válidas
-  - Fluxo de deploy end-to-end
-  - Detalhamento de Kubernetes manifests
-  - Decisões arquiteturais
-  - Próximos passos
+Implementei testes unitários, de integração, validação de transições de estado e todo o necessário para garantir a qualidade da aplicação.
 
 ---
 
-Se quiser, eu posso:
+## Pontos Relevantes da Arquitetura
+
+- **Separação clara de responsabilidades** — 4 repositórios, cada um com um propósito específico
+- **Autenticação serverless** — escalabilidade automática sem provisionar infraestrutura
+- **Infrastructure as Code** — toda a infraestrutura versionada via Terraform
+- **Kubernetes production-ready** — manifestos prontos para produção
+- **Monitoramento desde o início** — Prometheus + Grafana pré-configurado
+- **Segurança em camadas** — JWT, VPC privada, KMS, IAM roles, RBAC
+- **Escalabilidade automática** — HPA para pods + RDS scaling
+- **Documentação técnica** — RFCs, ADRs, diagramas de componentes e sequência
 
 ---
 
-Se quiser, eu posso:
-- Gerar o `postman_collection.json` automaticamente a partir do OpenAPI (exigirá executar a aplicação localmente para exportar a spec), e adicionar ao repositório.
-- Atualizar o README com o link do vídeo e da collection assim que você me fornecer os links.
+## Para colocar em produção
 
-<!-- Fim do README -->
+1. Crie os 4 repositórios no GitHub
+2. Configure as credenciais da AWS
+3. Execute os scripts Terraform (banco de dados primeiro, depois Kubernetes)
+4. Faça deploy do Lambda
+5. Faça deploy da aplicação
+6. Monitore tudo no Grafana
+
+Para dúvidas específicas, consulte os repositórios complementares (`infra-kubernetes`, `infra-database`, `auth-lambda`) que contêm seus próprios READMEs.
+
+---
+
+## Stack Tecnológico
+
+- Java 21 + Spring Boot 3.5.6
+- PostgreSQL 15 (RDS)
+- Redis (cache)
+- Docker + Kubernetes
+- Terraform
+- GitHub Actions
+- Prometheus + Grafana
+- AWS (Lambda, EKS, RDS, VPC...)
+
+---
+
+## Documentação Técnica Completa
+
+Para compreender melhor a solução:
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** — Visão geral da arquitetura Hexagonal, componentes e fluxos
+- **[docs/DIAGRAMA_COMPONENTES.md](./docs/DIAGRAMA_COMPONENTES.md)** — Diagrama de componentes com visão de nuvem, APIs, banco e monitoramento
+- **[docs/DIAGRAMA_SEQUENCIA.md](./docs/DIAGRAMA_SEQUENCIA.md)** — Diagramas de sequência para autenticação e fluxos principais
+- **[docs/RFC.md](./docs/RFC.md)** — Request for Comments com decisões técnicas (nuvem, autenticação, banco de dados)
+- **[docs/ADR.md](./docs/ADR.md)** — Architecture Decision Records com decisões arquiteturais permanentes
+- **[docs/BANCO_DE_DADOS.md](./docs/BANCO_DE_DADOS.md)** — Justificativa, diagrama ER, relacionamentos e schema SQL completo
+
+Toda a documentação de API está disponível no Swagger: http://localhost:8080/swagger-ui.html
+
+---
+
+**Versão**: 1.0  
+**Status**: Pronto para produção
