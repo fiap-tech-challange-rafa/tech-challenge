@@ -22,6 +22,8 @@ class FinalizarOrdemServicoServiceTest {
     @Test
     void deveFinalizarOS() {
         OrdemServico os = new OrdemServico(1L, 2L);
+        os.gerarOrcamento(); // Colocar em AGUARDANDO_APROVACAO
+        os.aprovarOrcamento(); // Colocar em EM_EXECUCAO
         when(repository.buscarPorId(1L)).thenReturn(Optional.of(os));
         when(repository.salvar(any())).thenReturn(os);
 

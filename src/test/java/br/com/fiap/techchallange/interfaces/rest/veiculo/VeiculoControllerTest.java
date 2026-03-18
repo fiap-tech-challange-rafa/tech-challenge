@@ -1,5 +1,6 @@
 package br.com.fiap.techchallange.interfaces.rest.veiculo;
 
+import br.com.fiap.techchallange.application.ordemservico.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.techchallange.domain.veiculo.Placa;
 import br.com.fiap.techchallange.domain.veiculo.Veiculo;
 import br.com.fiap.techchallange.domain.veiculo.VeiculoRepository;
@@ -28,12 +29,16 @@ class VeiculoControllerTest extends BaseControllerTest {
     private VeiculoRepository repository;
 
     @Autowired
+    private OrdemServicoRepositoryPort ordemServicoRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private Veiculo veiculo;
 
     @BeforeEach
     void setup() {
+        ordemServicoRepository.removerTodos(); // Limpar OrdenServicos primeiro para evitar constraint violation
         repository.removerTodos();
         veiculo = repository.salvar(new Veiculo(1L, new Placa("ABC-1234"), "Fiat", "Uno", 2020));
     }

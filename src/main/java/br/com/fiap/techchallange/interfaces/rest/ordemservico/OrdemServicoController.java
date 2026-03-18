@@ -26,6 +26,7 @@ public class OrdemServicoController {
     private final IncluirPecaNaOSPort incluirPeca;
     private final GerarOrcamentoPort gerarOrcamento;
     private final AprovarOrcamentoPort aprovarOrcamento;
+    private final RejeitarOrcamentoPort rejeitarOrcamento;
     private final FinalizarOrdemServicoPort finalizar;
     private final EntregarOrdemServicoPort entregar;
     private final BuscarOrdemPort buscar;
@@ -37,6 +38,7 @@ public class OrdemServicoController {
                                   IncluirPecaNaOSPort incluirPeca,
                                   GerarOrcamentoPort gerarOrcamento,
                                   AprovarOrcamentoPort aprovarOrcamento,
+                                  RejeitarOrcamentoPort rejeitarOrcamento,
                                   FinalizarOrdemServicoPort finalizar,
                                   EntregarOrdemServicoPort entregar,
                                   BuscarOrdemPort buscar, BuscarClienteService buscarClienteService, EnvioOrcamentoEmailService envioOrcamentoEmailService) {
@@ -45,6 +47,7 @@ public class OrdemServicoController {
         this.incluirPeca = incluirPeca;
         this.gerarOrcamento = gerarOrcamento;
         this.aprovarOrcamento = aprovarOrcamento;
+        this.rejeitarOrcamento = rejeitarOrcamento;
         this.finalizar = finalizar;
         this.entregar = entregar;
         this.buscar = buscar;
@@ -100,12 +103,25 @@ public class OrdemServicoController {
     @Operation(summary = "Aprova orçamento da OS")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Orçamento aprovado"),
-            @ApiResponse(responseCode = "404", description = "OS não encontrada")
+            @ApiResponse(responseCode = "404", description = "OS não encontrada"),
+            @ApiResponse(responseCode = "400", description = "OS não está aguardando aprovação")
     })
-    @GetMapping("/{id}/aprovar")
+    @PutMapping("/{id}/aprovar")
     public ResponseEntity<?> aprovar(@PathVariable Long id) {
         OrdemServico os = aprovarOrcamento.executar(id);
-        return ResponseEntity.ok("Orçamento Aprovado!");
+        return ResponseEntity.ok(OrdemServicoResponse.fromDomain(os));
+    }
+
+    @Operation(summary = "Rejeita orçamento da OS")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Orçamento rejeitado"),
+            @ApiResponse(responseCode = "404", description = "OS não encontrada"),
+            @ApiResponse(responseCode = "400", description = "OS não está aguardando aprovação")
+    })
+    @PutMapping("/{id}/rejeitar")
+    public ResponseEntity<?> rejeitar(@PathVariable Long id) {
+        OrdemServico os = rejeitarOrcamento.executar(id);
+        return ResponseEntity.ok(OrdemServicoResponse.fromDomain(os));
     }
 
     @Operation(summary = "Finaliza uma OS")

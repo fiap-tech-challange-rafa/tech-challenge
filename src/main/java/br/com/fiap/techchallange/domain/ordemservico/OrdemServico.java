@@ -63,19 +63,35 @@ public class OrdemServico {
     }
 
     public void aprovarOrcamento() {
+        if (status != StatusOS.AGUARDANDO_APROVACAO) {
+            throw new IllegalStateException("Apenas orçamentos AGUARDANDO_APROVACAO podem ser aprovados. Status atual: " + status);
+        }
         status = StatusOS.EM_EXECUCAO;
+        dataAtualizacao = LocalDateTime.now();
     }
 
     public void rejeitarOrcamento() {
+        if (status != StatusOS.AGUARDANDO_APROVACAO) {
+            throw new IllegalStateException("Apenas orçamentos AGUARDANDO_APROVACAO podem ser rejeitados. Status atual: " + status);
+        }
         status = StatusOS.CANCELADA;
+        dataAtualizacao = LocalDateTime.now();
     }
 
     public void finalizar() {
+        if (status != StatusOS.EM_EXECUCAO) {
+            throw new IllegalStateException("Apenas OS em EM_EXECUCAO podem ser finalizadas. Status atual: " + status);
+        }
         status = StatusOS.FINALIZADA;
+        dataAtualizacao = LocalDateTime.now();
     }
 
     public void entregar() {
+        if (status != StatusOS.FINALIZADA) {
+            throw new IllegalStateException("Apenas OS em FINALIZADA podem ser entregues. Status atual: " + status);
+        }
         status = StatusOS.ENTREGUE;
+        dataAtualizacao = LocalDateTime.now();
     }
 
     private void recalcularOrcamento() {

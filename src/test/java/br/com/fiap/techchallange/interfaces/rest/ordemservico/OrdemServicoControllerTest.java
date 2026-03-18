@@ -126,14 +126,29 @@ class OrdemServicoControllerTest extends BaseControllerTest {
 
     @Test
     void deveFinalizarOrdemServico() throws Exception {
-        mockMvc.perform(post("/api/ordem-servico/{id}/finalizar", os.getId()))
+        // Preparar a OS no estado correto (EM_EXECUCAO)
+        OrdemServico osParaFinalizar = new OrdemServico(cliente.getId(), veiculo.getId());
+        osParaFinalizar = repository.salvar(osParaFinalizar);
+        osParaFinalizar.gerarOrcamento();
+        osParaFinalizar.aprovarOrcamento();
+        osParaFinalizar = repository.salvar(osParaFinalizar);
+
+        mockMvc.perform(post("/api/ordem-servico/{id}/finalizar", osParaFinalizar.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FINALIZADA"));
     }
 
     @Test
     void deveEntregarOrdemServico() throws Exception {
-        mockMvc.perform(post("/api/ordem-servico/{id}/entregar", os.getId()))
+        // Preparar a OS no estado correto (FINALIZADA)
+        OrdemServico osParaEntregar = new OrdemServico(cliente.getId(), veiculo.getId());
+        osParaEntregar = repository.salvar(osParaEntregar);
+        osParaEntregar.gerarOrcamento();
+        osParaEntregar.aprovarOrcamento();
+        osParaEntregar.finalizar();
+        osParaEntregar = repository.salvar(osParaEntregar);
+
+        mockMvc.perform(post("/api/ordem-servico/{id}/entregar", osParaEntregar.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ENTREGUE"));
     }

@@ -1,0 +1,20 @@
+# Configuração de exemplo para Terraform
+# Copie este arquivo para terraform.tfvars e preencha os valores
+
+kubeconfig_path  = "~/.kube/config"
+namespace        = "tech-challenge"
+environment      = "prod"
+app_image        = "tech-challenge:latest"
+app_replicas     = 2
+service_type     = "ClusterIP"  # ou NodePort para dev
+db_host          = "postgres"
+db_port          = 5432
+db_name          = "tech_challenge"
+db_user          = "postgres"
+db_password      = "tech_challenge_password"
+log_level        = "INFO"
+jwt_secret       = "jwt-secret-key-for-tech-challenge"
+admin_user       = "admin"
+admin_password   = "admin123"
+hpa_min_replicas = 2
+hpa_max_replicas = 5
