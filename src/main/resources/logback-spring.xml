@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+  <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+  <property name="LOG_FILE" value="logs/tech-challenge.log"/>
+  <property name="LOG_FILE_MAX_SIZE" value="10MB"/>
+  <property name="LOG_FILE_MAX_HISTORY" value="30"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_FILE}</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>logs/tech-challenge-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${LOG_FILE_MAX_SIZE}</maxFileSize>
+      <maxHistory>${LOG_FILE_MAX_HISTORY}</maxHistory>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>512</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+    <appender-ref ref="FILE"/>
+  </appender>
+
+  <logger name="br.com.fiap.techchallange" level="DEBUG"/>
+  <logger name="org.springframework.web" level="INFO"/>
+  <logger name="org.springframework.security" level="DEBUG"/>
+  <logger name="org.springframework.data" level="DEBUG"/>
+  <logger name="org.hibernate" level="WARN"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="ASYNC_FILE"/>
+  </root>
+
+  <springProfile name="prod">
+    <root level="WARN">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ASYNC_FILE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="local">
+    <root level="DEBUG">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+</configuration>

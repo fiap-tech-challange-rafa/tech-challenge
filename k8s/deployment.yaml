@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tech-challenge
-  namespace: default
+  namespace: tech-challenge
   labels:
     app: tech-challenge
     version: "1.0"
