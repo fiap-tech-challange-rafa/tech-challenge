@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: tech-challenge
   labels:
+    name: tech-challenge
     app: tech-challenge
     environment: production
 

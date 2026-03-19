@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tech-challenge-config
-  namespace: default
+  namespace: tech-challenge
 data:
   # Spring Boot application properties
   SPRING_PROFILES_ACTIVE: "prod"
