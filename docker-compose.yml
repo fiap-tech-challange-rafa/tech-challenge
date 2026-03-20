@@ -42,6 +42,20 @@ services:
     depends_on:
       - app
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_DISABLE_BRUTE_FORCE_LOGIN_PROTECTION=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
   app:
     build: .
     container_name: tech-challange-app
@@ -63,6 +77,8 @@ services:
       - MAIL_USERNAME=rafaellarosa07@gmail.com
       - MAIL_PASSWORD=eyjekybvrihzgtvq
       - JWT_SECRET=minhaChaveSecretaSuperSegura123456
+      - JWT_AUTH_LAMBDA_SECRET=${AUTH_LAMBDA_JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_ALLOW_UNSAFE_AUTH_LAMBDA=true
       - ADMIN_USER=admin
       - ADMIN_PASSWORD=admin123
     ports:
@@ -75,4 +91,5 @@ volumes:
   mysql_data:
   redis_data:
   prometheus_data:
+  grafana_data:
 
