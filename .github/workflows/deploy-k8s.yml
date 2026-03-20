@@ -13,6 +13,7 @@ env:
 
 jobs:
   deploy:
+    if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,3 +86,11 @@ jobs:
           kubectl port-forward svc/tech-challenge 8080:8080 -n $K8S_NAMESPACE >/tmp/port-forward.log 2>&1 &
           sleep 10
           curl -fsS http://localhost:8080/actuator/health
+
+  skip-without-aws-secrets:
+    if: ${{ secrets.AWS_ACCESS_KEY_ID == '' || secrets.AWS_SECRET_ACCESS_KEY == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip deploy when AWS secrets are missing
+        run: |
+          echo "::warning::Deploy to EKS skipped. Configure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in repository secrets."
