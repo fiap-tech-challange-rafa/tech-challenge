@@ -1,4 +1,4 @@
-CREATE TABLE cliente (
+CREATE TABLE IF NOT EXISTS cliente (
                          id BIGINT PRIMARY KEY AUTO_INCREMENT,
                          nome VARCHAR(255),
                          documento VARCHAR(20),
@@ -6,7 +6,7 @@ CREATE TABLE cliente (
                          email VARCHAR(255)
 );
 
-CREATE TABLE veiculo (
+CREATE TABLE IF NOT EXISTS veiculo (
                          id BIGINT PRIMARY KEY AUTO_INCREMENT,
                          cliente_id BIGINT,
                          placa VARCHAR(20),
@@ -14,14 +14,14 @@ CREATE TABLE veiculo (
                          modelo VARCHAR(50),
                          ano INT);
 
-CREATE TABLE servico (
+CREATE TABLE IF NOT EXISTS servico (
                          id BIGINT PRIMARY KEY AUTO_INCREMENT,
                          codigo VARCHAR(50),
                          descricao VARCHAR(255),
                          preco DECIMAL(10,2)
 );
 
-CREATE TABLE peca (
+CREATE TABLE IF NOT EXISTS peca (
                       id BIGINT PRIMARY KEY AUTO_INCREMENT,
                       sku VARCHAR(50),
                       nome VARCHAR(255),
@@ -29,7 +29,7 @@ CREATE TABLE peca (
                       quantidade_estoque INT
 );
 
-CREATE TABLE ordem_servico (
+CREATE TABLE IF NOT EXISTS ordem_servico (
                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                cliente_id BIGINT,
                                veiculo_id BIGINT,
@@ -41,7 +41,7 @@ CREATE TABLE ordem_servico (
                                FOREIGN KEY (veiculo_id) REFERENCES veiculo(id)
 );
 
-CREATE TABLE os_item_servico (
+CREATE TABLE IF NOT EXISTS os_item_servico (
                                  id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                  ordem_id BIGINT,
                                  servico_id BIGINT,
@@ -51,7 +51,7 @@ CREATE TABLE os_item_servico (
                                  FOREIGN KEY (servico_id) REFERENCES servico(id)
 );
 
-CREATE TABLE os_item_peca (
+CREATE TABLE IF NOT EXISTS os_item_peca (
                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
                               nome VARCHAR(255),
                               peca_id BIGINT,
