@@ -12,6 +12,7 @@ public class BuscarClienteService {
 
     private final ClienteRepository repository;
 
+    //para o video
     public BuscarClienteService(ClienteRepository repository) {
         this.repository = repository;
     }
