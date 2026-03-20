@@ -71,6 +71,23 @@ function Wait-HttpOk {
     return $false
 }
 
+function Reset-GrafanaAdminPassword {
+    param(
+        [string]$ContainerName = "grafana",
+        [string]$Password = "admin"
+    )
+
+    for ($attempt = 1; $attempt -le 20; $attempt++) {
+        docker exec $ContainerName grafana cli admin reset-admin-password $Password *> $null
+        if ($LASTEXITCODE -eq 0) {
+            return $true
+        }
+        Start-Sleep -Seconds 2
+    }
+
+    return $false
+}
+
 function Set-AuthLambdaDependencyVersion {
     param([string]$AuthRepoDir)
 
@@ -209,7 +226,7 @@ Write-Host "Iniciando subida dos 4 repositorios para o video..." -ForegroundColo
 Write-Step "1/4 - Subindo tech-challange (Docker Compose)"
 Push-Location $repos.tech
 try {
-    Invoke-External { docker compose up -d --build db redis prometheus app } "Failed to start Docker Compose services"
+    Invoke-External { docker compose up -d --build db redis prometheus grafana app } "Failed to start Docker Compose services"
     Invoke-External { docker compose ps } "Failed to list Docker Compose services"
 } finally {
     Pop-Location
@@ -219,6 +236,17 @@ if (Wait-HttpOk -Url "http://localhost:8080/actuator/health") {
     Write-Host "tech-challange ativo em http://localhost:8080" -ForegroundColor Green
 } else {
     Write-Host "tech-challange iniciado, mas healthcheck ainda nao respondeu. Veja logs com: docker logs -f tech-challange-app" -ForegroundColor Yellow
+}
+
+if (Wait-HttpOk -Url "http://localhost:3000") {
+    if (Reset-GrafanaAdminPassword -ContainerName "grafana" -Password "admin") {
+        Write-Host "Senha do Grafana sincronizada para admin/admin" -ForegroundColor Green
+    } else {
+        Write-Host "Nao foi possivel resetar senha do Grafana automaticamente. Tente manualmente: docker exec grafana grafana cli admin reset-admin-password admin" -ForegroundColor Yellow
+    }
+    Write-Host "Grafana ativo em http://localhost:3000" -ForegroundColor Green
+} else {
+    Write-Host "Grafana iniciado, mas ainda nao respondeu. Veja logs com: docker logs -f grafana" -ForegroundColor Yellow
 }
 
 Write-Step "2/4 - Subindo auth-lambda (SAM Local + PostgreSQL)"
@@ -304,6 +332,7 @@ Write-Host "URLs para o video:" -ForegroundColor Green
 Write-Host "- App: http://localhost:8080/swagger-ui.html"
 Write-Host "- Health: http://localhost:8080/actuator/health"
 Write-Host "- Prometheus: http://localhost:9090"
+Write-Host "- Grafana: http://localhost:3000 (admin/admin)"
 Write-Host "- Lambda local: http://127.0.0.1:$LambdaPort/auth/authenticate"
 Write-Host ""
 Write-Host "Para subir com provisionamento de infra AWS: .\subir-4-aplicacoes.ps1 -ApplyInfra" -ForegroundColor Cyan
