@@ -13,7 +13,6 @@ env:
 
 jobs:
   deploy:
-    if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,16 +20,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check AWS secrets
+        id: aws-secrets
+        shell: bash
+        run: |
+          if [[ -n "${{ secrets.AWS_ACCESS_KEY_ID }}" && -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up JDK 21
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         uses: actions/setup-java@v4
         with:
           java-version: "21"
           distribution: "temurin"
 
       - name: Build and test
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: mvn -B clean package
 
       - name: Configure AWS credentials
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -38,15 +50,18 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Ensure ECR repository exists
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: |
           aws ecr describe-repositories --repository-names $ECR_REPOSITORY || \
           aws ecr create-repository --repository-name $ECR_REPOSITORY
 
       - name: Build and push image to ECR
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
@@ -56,14 +71,17 @@ jobs:
           echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Setup kubectl
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         uses: azure/setup-kubectl@v4
         with:
           version: "v1.30.0"
 
       - name: Configure kubeconfig
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
       - name: Deploy manifests
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: |
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/rbac.yaml
@@ -75,22 +93,22 @@ jobs:
           kubectl apply -f k8s/hpa.yaml
 
       - name: Update deployment image
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: |
           kubectl set image deployment/tech-challenge app=$IMAGE_URI -n $K8S_NAMESPACE --record
 
       - name: Wait for rollout
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: kubectl rollout status deployment/tech-challenge -n $K8S_NAMESPACE --timeout=5m
 
       - name: Validate health after deploy
+        if: ${{ steps.aws-secrets.outputs.available == 'true' }}
         run: |
           kubectl port-forward svc/tech-challenge 8080:8080 -n $K8S_NAMESPACE >/tmp/port-forward.log 2>&1 &
           sleep 10
           curl -fsS http://localhost:8080/actuator/health
 
-  skip-without-aws-secrets:
-    if: ${{ secrets.AWS_ACCESS_KEY_ID == '' || secrets.AWS_SECRET_ACCESS_KEY == '' }}
-    runs-on: ubuntu-latest
-    steps:
       - name: Skip deploy when AWS secrets are missing
+        if: ${{ steps.aws-secrets.outputs.available != 'true' }}
         run: |
           echo "::warning::Deploy to EKS skipped. Configure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in repository secrets."
